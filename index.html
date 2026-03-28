@@ -137,10 +137,12 @@
 
         .car {
             position: absolute;
-            width: 280px; /* Adjust size based on image */
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
+            width: 280px;
+            /* Adjust size based on image */
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.8));
             z-index: 5;
-            left: -400px; /* Start way off screen */
+            left: -400px;
+            /* Start way off screen */
             animation: carEntry 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
         }
 
@@ -156,11 +158,13 @@
                 transform: scale(0.8) skewX(20deg);
                 opacity: 0;
             }
+
             70% {
                 left: 10%;
                 transform: scale(1.05) skewX(-5deg);
                 opacity: 1;
             }
+
             100% {
                 left: 50%;
                 transform: translateX(-50%) scale(1) skewX(0deg);
@@ -326,7 +330,7 @@
         }
 
         // WhatsApp Redirect Logic
-        const PHONE_NUMBER = "01117382768";
+        const PHONE_NUMBER = "0201117382768";
         const INITIAL_MESSAGE = encodeURIComponent("خصم");
         const WHATSAPP_URL = `https://wa.me/${PHONE_NUMBER}?text=${INITIAL_MESSAGE}`;
 
