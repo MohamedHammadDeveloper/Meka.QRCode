@@ -1,0 +1,161 @@
+{
+  "name": "WhatsApp Marketing Automation System",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ultramsg-inbound",
+        "options": {}
+      },
+      "name": "Webhook - UltraMsg Incoming",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "mode": "jsonToItem",
+        "jsonToItem": {
+          "values": [
+            { "name": "body", "type": "string", "mapping": "={{$json[\"body\"][\"body\"]}}" },
+            { "name": "from", "type": "string", "mapping": "={{$json[\"body\"][\"from\"]}}" }
+          ]
+        }
+      },
+      "name": "Parse Incoming Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [200, 0]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{$node[\"Parse Incoming Message\"].json[\"body\"]}}",
+        "rules": {
+          "rules": [
+            { "operation": "contains", "value2": "خصم" },
+            { "operation": "regex", "value2": "^[1-3]$" },
+            { "operation": "contains", "value2": "مهتم" }
+          ]
+        }
+      },
+      "name": "Switch - Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [400, 0]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT o.* FROM Offers o WHERE o.Active = true AND o.Id NOT IN (SELECT uo.OfferId FROM UserOffers uo JOIN Users u ON u.Id = uo.UserId WHERE u.Phone = '{{$node[\"Parse Incoming Message\"].json[\"from\"]}}' AND uo.DateSent > NOW() - INTERVAL '7 days') ORDER BY RANDOM() LIMIT 3;"
+      },
+      "name": "Supabase - Get 3 Random Offers",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [600, -200]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=https://api.ultramsg.com/{{$env[\"ULTRAMSG_INSTANCE_ID\"]}}/messages/chat",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/x-www-form-urlencoded" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "token", "value": "={{$env[\"ULTRAMSG_TOKEN\"]}}" },
+            { "name": "to", "value": "={{$node[\"Parse Incoming Message\"].json[\"from\"]}}" },
+            { "name": "body", "value": "=إليك 3 عروض حصرية لك:\n{{$json[\"Title\"]}}\n{{$json[\"Description\"]}}\n\nللاشتراك في أحد العروض يرجى الرد برقم (1، 2، 3) أو كتابة \"مهتم\"" }
+          ]
+        }
+      },
+      "name": "UltraMsg - Send Offers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [800, -200]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE UserOffers SET IsInterested = true WHERE UserId = (SELECT Id FROM Users WHERE Phone = '{{$node[\"Parse Incoming Message\"].json[\"from\"]}}'); INSERT INTO MessagesLog (UserId, Message, Direction, Status) VALUES ((SELECT Id FROM Users WHERE Phone = '{{$node[\"Parse Incoming Message\"].json[\"from\"]}}'), 'مهتم', 'INBOUND', 'SAVED');"
+      },
+      "name": "Supabase - Mark Interested & Log",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [600, 200]
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "=https://api.ultramsg.com/{{$env[\"ULTRAMSG_INSTANCE_ID\"]}}/messages/chat",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/x-www-form-urlencoded" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "token", "value": "={{$env[\"ULTRAMSG_TOKEN\"]}}" },
+            { "name": "to", "value": "={{$node[\"Parse Incoming Message\"].json[\"from\"]}}" },
+            { "name": "body", "value": "شكراً لاهتمامك! تم تسجيل طلبك، وسنتواصل معك قريباً لإتمام الإجراءات." }
+          ]
+        }
+      },
+      "name": "UltraMsg - Send Confirmation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [800, 200]
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [ { "mode": "everyDay", "hour": 10, "minute": 0 } ]
+        }
+      },
+      "name": "Daily Cron Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [0, 400]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM Users WHERE State != 'INTERESTED' AND OptIn = true;"
+      },
+      "name": "Supabase - Get Active Users",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [200, 400]
+    }
+  ],
+  "connections": {
+    "Webhook - UltraMsg Incoming": {
+      "main": [ [ { "node": "Parse Incoming Message", "type": "main", "index": 0 } ] ]
+    },
+    "Parse Incoming Message": {
+      "main": [ [ { "node": "Switch - Router", "type": "main", "index": 0 } ] ]
+    },
+    "Switch - Router": {
+      "main": [
+        [ { "node": "Supabase - Get 3 Random Offers", "type": "main", "index": 0 } ],
+        [ ] ,
+        [ { "node": "Supabase - Mark Interested & Log", "type": "main", "index": 0 } ]
+      ]
+    },
+    "Supabase - Get 3 Random Offers": {
+      "main": [ [ { "node": "UltraMsg - Send Offers", "type": "main", "index": 0 } ] ]
+    },
+    "Supabase - Mark Interested & Log": {
+      "main": [ [ { "node": "UltraMsg - Send Confirmation", "type": "main", "index": 0 } ] ]
+    },
+    "Daily Cron Trigger": {
+      "main": [ [ { "node": "Supabase - Get Active Users", "type": "main", "index": 0 } ] ]
+    }
+  }
+}

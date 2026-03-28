@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEKA - عالم قطع غيار السيارات</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #f39c12;
+            /* Gold/Orange automotive accent */
+            --accent: #e74c3c;
+            --dark-bg: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text-light: #ffffff;
+            --text-gray: #b3b3b3;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--dark-bg);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: var(--text-light);
+        }
+
+        /* Speed Background Animation */
+        .speed-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            opacity: 0.2;
+        }
+
+        .line {
+            position: absolute;
+            background: linear-gradient(to right, transparent, var(--primary));
+            height: 2px;
+            width: 100px;
+            animation: moveLines 1.5s linear infinite;
+        }
+
+        @keyframes moveLines {
+            from {
+                transform: translateX(110vw);
+            }
+
+            to {
+                transform: translateX(-110vw);
+            }
+        }
+
+        .main-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Logo Animation */
+        .logo-container {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            border-radius: 50%;
+            padding: 5px;
+            background: linear-gradient(45deg, var(--primary), transparent);
+            box-shadow: 0 0 20px rgba(243, 156, 18, 0.3);
+            animation: zoomIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            overflow: hidden;
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        /* Branding Animation */
+        .brand-name {
+            font-size: 50px;
+            font-weight: 900;
+            letter-spacing: 5px;
+            color: var(--text-light);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            opacity: 0;
+            animation: slideDownFade 1s 0.3s ease-out forwards;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .brand-name span {
+            color: var(--primary);
+        }
+
+        .tagline {
+            font-size: 18px;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 30px;
+            opacity: 0;
+            animation: fadeIn 1s 0.8s ease-out forwards;
+        }
+
+        /* Car Animation Wrapper */
+        .car-track {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            margin: 10px 0;
+            overflow: visible;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .car {
+            position: absolute;
+            width: 280px; /* Adjust size based on image */
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
+            z-index: 5;
+            left: -400px; /* Start way off screen */
+            animation: carEntry 1.2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        .car img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        @keyframes carEntry {
+            0% {
+                left: -400px;
+                transform: scale(0.8) skewX(20deg);
+                opacity: 0;
+            }
+            70% {
+                left: 10%;
+                transform: scale(1.05) skewX(-5deg);
+                opacity: 1;
+            }
+            100% {
+                left: 50%;
+                transform: translateX(-50%) scale(1) skewX(0deg);
+                opacity: 1;
+            }
+        }
+
+        /* Message Box */
+        .promo-box {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideUp 0.8s 1.2s ease-out forwards;
+        }
+
+        .promo-box h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .promo-box p {
+            color: var(--text-gray);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .loader {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .loader-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            animation: loadingProgress 3s linear forwards;
+        }
+
+        @keyframes loadingProgress {
+            to {
+                width: 100%;
+            }
+        }
+
+        /* Global Keyframes */
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideDownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 480px) {
+            .brand-name {
+                font-size: 40px;
+            }
+
+            .tagline {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Background Speed Lines -->
+    <div class="speed-lines" id="speedLines"></div>
+
+    <div class="main-container">
+        <!-- Logo Section -->
+        <div class="logo-container">
+            <img src="logo.jpeg" alt="MEKA Logo">
+        </div>
+
+        <!-- Brand Detail -->
+        <div class="brand-name">ME<span>KA</span></div>
+        <div class="tagline">"مع ميكا.. خصوماتنا دايمًا أنتيكا"</div>
+
+        <!-- Car Track Animation -->
+        <div class="car-track">
+            <div class="car">
+                <img src="car.png" alt="Featured Car">
+            </div>
+        </div>
+
+        <!-- Promo/Redirect Info -->
+        <div class="promo-box">
+            <h2>أقوى عروض قطع الغيار</h2>
+            <p>مرحباً بك في ميكا. جاري تجهيز الخصومات الحصرية الخاصة بسيارتك وتوجيهك لخدمة العملاء...</p>
+
+            <div class="loader">
+                <div class="loader-bar"></div>
+            </div>
+
+            <div style="margin-top: 15px; font-size: 12px; color: var(--primary);">
+                سيتم تحويلك خلال 3 ثواني
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Generate Speed Lines
+        const container = document.getElementById('speedLines');
+        for (let i = 0; i < 20; i++) {
+            const line = document.createElement('div');
+            line.className = 'line';
+            line.style.top = Math.random() * 100 + '%';
+            line.style.left = Math.random() * 100 + '%';
+            line.style.animationDelay = Math.random() * 2 + 's';
+            line.style.opacity = Math.random();
+            container.appendChild(line);
+        }
+
+        // WhatsApp Redirect Logic
+        const PHONE_NUMBER = "01117382768";
+        const INITIAL_MESSAGE = encodeURIComponent("خصم");
+        const WHATSAPP_URL = `https://wa.me/${PHONE_NUMBER}?text=${INITIAL_MESSAGE}`;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                window.location.href = WHATSAPP_URL;
+            }, 3000); // 3-second redirect as requested
+        });
+    </script>
+</body>
+
+</html>
